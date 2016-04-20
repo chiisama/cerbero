@@ -17,7 +17,7 @@ class Recipe(custom.GStreamerStatic):
         --disable-xvid --disable-zbar --disable-sdi --disable-qt'
     remotes = {'origin': 'git://anongit.freedesktop.org/gstreamer/gst-plugins-bad'}
     deps = ['gstreamer-1.0', 'gst-plugins-base-1.0', 'bzip2', 'libass',
-            'faad2', 'libkate', 'zlib', 'openh264', 'opus', 'nettle', 'librtmp',
+            'faad2', 'libkate', 'zlib', 'openh264', 'opus', 'nettle', #FIXME'librtmp',
             'libsrtp', 'schroedinger', 'libdca', 'libmms', 'libdvdnav',
             'soundtouch', 'vo-aacenc', 'librsvg', 'openjpeg', 'graphene',
             'spandsp', 'webrtc-audio-processing']
@@ -113,7 +113,7 @@ class Recipe(custom.GStreamerStatic):
 
     files_plugins_net_restricted_devel = [
              'libgstmms',
-             'libgstrtmp',
+             #FIXME'libgstrtmp',
     ]
 
     files_plugins_capture_devel = [
