@@ -421,13 +421,15 @@ class Meson (MakefilesBase):
 
     '''
     configure_tpl = '%(config-sh)s --prefix=%(prefix)s --libdir=%(libdir)s \
-            --default-library=%(default-library)s --buildtype=%(buildtype)s ..'
+            --default-library=%(default-library)s --buildtype=%(buildtype)s \
+            --backend=%(backend)s ..'
     make = None
     make_install = None
     make_check = None
     make_clean = None
     autodetect_jobs = False
     default_library = 'shared'
+    meson_backend = 'ninja'
     requires_non_src_build = True
     can_use_msvc_toolchain = True
 
@@ -479,7 +481,8 @@ class Meson (MakefilesBase):
                    'prefix': prefix,
                    'libdir': libdir,
                    'default-library': self.default_library,
-                   'buildtype': buildtype}
+                   'buildtype': buildtype,
+                   'backend': self.meson_backend,}
         shell_cmd = self.configure_tpl % options
         if self.config.target_arch != self.config.arch or \
            self.config.target_platform != self.config.platform:
