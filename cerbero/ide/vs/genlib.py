@@ -17,6 +17,7 @@
 # Boston, MA 02111-1307, USA.
 
 import os
+import re
 
 from cerbero.config import Architecture
 from cerbero.utils import shell, to_unixpath
@@ -25,8 +26,8 @@ from cerbero.utils import shell, to_unixpath
 class GenLib(object):
     '''
     Generates an import library that can be used in Visual Studio from a DLL,
-    using 'gendef' to create a .def file and than libtool to create the import
-    library
+    using 'gendef' to create a .def file and then libtool to create the import
+    library (.lib)
     '''
 
     DLLTOOL_TPL = '$DLLTOOL -d %s -l %s -D %s'
@@ -39,7 +40,10 @@ class GenLib(object):
         shell.call('gendef %s' % dllpath, outputdir)
 
         defname = dllname.replace('.dll', '.def')
-        implib = '%s.lib' % libname[3:]
+        if libname.startswith('lib'):
+            implib = libname[3:] + '.lib'
+        else:
+            implib = libname + '.lib'
 
         # Create the import library
         vc_path = self._get_vc_tools_path()
@@ -68,3 +72,26 @@ class GenLib(object):
             if os.path.exists (path):
                 return path
         return None
+
+class GenGnuLib(GenLib):
+    '''
+    Generates an import library (libfoo.dll.a; not foo.lib) that is in a format
+    that allows GNU ld to resolve all symbols exported by a DLL created by MSVC.
+
+    Usually everything works fine even if you pass a .lib import library created
+    by MSVC to GNU GCC/LD, but it can't find any exported DATA (variable)
+    symbols from the import library, but it can find them if you pass it the DLL
+    directly. Since that's a terrible idea and breaks how library searching
+    works, we create a GNU-compatible import library which works.
+    '''
+
+    def create(self, dllpath, arch, outputdir):
+        dllname = os.path.basename(dllpath)
+        # Create the .def file
+        shell.call('gendef ' + dllpath, outputdir)
+        defname = dllname.replace('.dll', '.def')
+        # foo.dll, libfoo.dll, libfoo-x.dll, foo-x.dll all need libfoo.dll.a
+        libname = re.match(r'(lib)?(.*?)(-[0-9]+)?\.dll', dllname).groups()[1]
+        gnuimplib = 'lib{0}.dll.a'.format(libname)
+        shell.call(self.DLLTOOL_TPL % (defname, gnuimplib, dllname), outputdir)
+        return os.path.join(outputdir, gnuimplib)
